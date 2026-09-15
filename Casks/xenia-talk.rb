@@ -2,8 +2,7 @@ cask "xenia-talk" do
   version "2.3.1-beta-xenia.1"
   sha256 "6cf7b002fd4a3c825206eac325612a1607df61ba8c82d5ff8e112756939472bf"
 
-  url "https://github.com/Krateos-BV/talk-desktop/releases/download/v#{version}/Xenia.Talk-macos-universal.zip",
-      verified: "github.com/Krateos-BV/talk-desktop/"
+  url "https://github.com/Krateos-BV/talk-desktop/releases/download/v#{version}/Xenia.Talk-macos-universal.zip"
   name "Xenia Talk"
   desc "Independently maintained Talk client, not affiliated with Nextcloud GmbH"
   homepage "https://xeniacloud.eu/"
