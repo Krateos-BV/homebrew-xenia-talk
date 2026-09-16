@@ -1,6 +1,6 @@
 cask "xenia-talk" do
-  version "2.3.1-beta-xenia.1"
-  sha256 "6cf7b002fd4a3c825206eac325612a1607df61ba8c82d5ff8e112756939472bf"
+  version "26.9.13"
+  sha256 "ed39605a75b79aeb8029a26ca1ade1f5792d87944d154bfe2ecadeeb3c6ae7e4"
 
   url "https://github.com/Krateos-BV/talk-desktop/releases/download/v#{version}/Xenia.Talk-macos-universal.zip"
   name "Xenia Talk"
