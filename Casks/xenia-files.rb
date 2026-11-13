@@ -1,9 +1,6 @@
 cask "xenia-files" do
-  # PLACEHOLDER until the first Xenia Files release is published (XEN-348).
-  # Replace version with the release tag minus its leading "v", and sha256 with the
-  # macos-arm64-signed.dmg line from that release's SHA256SUMS. Do not merge before.
-  version "26.11.8"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  version "26.11.11.2"
+  sha256 "7d95000c7a53899499a4663497024b7647a17d8b218edfc643462dffad5712fe"
 
   url "https://github.com/Krateos-BV/files-desktop/releases/download/v#{version}/Xenia-Files-v#{version}-macos-arm64-signed.dmg"
   name "Xenia Files"
