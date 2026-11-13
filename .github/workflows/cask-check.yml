@@ -1,0 +1,64 @@
+# Checks the Xenia Files cask on a real Mac: style, online audit, install from the
+# published DMG, Gatekeeper assessment of the installed app, and uninstall --zap.
+# Runs on GitHub-hosted macOS (public repo, no secrets used). XEN-348.
+name: Cask check
+
+on:
+  pull_request:
+    paths:
+      - "Casks/xenia-files.rb"
+      - ".github/workflows/cask-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  xenia-files:
+    name: xenia-files (style, audit, install, Gatekeeper, zap)
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Use this checkout as the krateos-bv/xenia-talk tap
+        run: |
+          set -euo pipefail
+          TAPS="$(brew --repository)/Library/Taps/krateos-bv"
+          mkdir -p "${TAPS}"
+          rm -rf "${TAPS}/homebrew-xenia-talk"
+          ln -s "${GITHUB_WORKSPACE}" "${TAPS}/homebrew-xenia-talk"
+          brew tap | grep -x krateos-bv/xenia-talk
+          # Current Homebrew refuses to load casks from a third-party tap until it is trusted.
+          brew trust krateos-bv/xenia-talk
+
+      - name: brew style
+        run: brew style krateos-bv/xenia-talk/xenia-files
+
+      - name: brew audit (online)
+        run: brew audit --cask --online krateos-bv/xenia-talk/xenia-files
+
+      - name: brew install
+        run: brew install --cask krateos-bv/xenia-talk/xenia-files
+
+      - name: Installed app is signed, notarised and accepted by Gatekeeper
+        run: |
+          set -euo pipefail
+          APP="/Applications/Xenia Files.app"
+          test -d "${APP}"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${APP}/Contents/Info.plist"
+          codesign --verify --deep --strict --verbose=2 "${APP}"
+          xcrun stapler validate "${APP}"
+          spctl --assess --type execute --verbose=4 "${APP}"
+
+      - name: brew uninstall --zap
+        run: |
+          set -euo pipefail
+          brew uninstall --zap --cask krateos-bv/xenia-talk/xenia-files
+          test ! -e "/Applications/Xenia Files.app"
