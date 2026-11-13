@@ -35,6 +35,8 @@ jobs:
           rm -rf "${TAPS}/homebrew-xenia-talk"
           ln -s "${GITHUB_WORKSPACE}" "${TAPS}/homebrew-xenia-talk"
           brew tap | grep -x krateos-bv/xenia-talk
+          # Current Homebrew refuses to load casks from a third-party tap until it is trusted.
+          brew trust krateos-bv/xenia-talk
 
       - name: brew style
         run: brew style krateos-bv/xenia-talk/xenia-files

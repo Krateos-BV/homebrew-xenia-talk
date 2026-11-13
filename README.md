@@ -9,8 +9,12 @@ Homebrew tap for the Xenia desktop clients:
 
 ```sh
 brew tap Krateos-BV/xenia-talk
+brew trust krateos-bv/xenia-talk
 brew install --cask xenia-talk
 ```
+
+Current Homebrew refuses to load casks from a third-party tap until you trust it
+(`brew trust`), once per tap.
 
 Or in one step:
 
