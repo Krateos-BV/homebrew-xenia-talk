@@ -1,12 +1,14 @@
-# Checks the Xenia Files cask on a real Mac: style, online audit, install from the
-# published DMG, Gatekeeper assessment of the installed app, and uninstall --zap.
-# Runs on GitHub-hosted macOS (public repo, no secrets used). XEN-348.
+# Checks the casks on a real Mac: style, online audit, install from the published
+# artifact, Gatekeeper assessment of the installed app, and uninstall --zap.
+# xenia-talk also installs the cask from main first and upgrades over it.
+# Runs on GitHub-hosted macOS (public repo, no secrets used). XEN-348, XEN-349.
 name: Cask check
 
 on:
   pull_request:
     paths:
       - "Casks/xenia-files.rb"
+      - "Casks/xenia-talk.rb"
       - ".github/workflows/cask-check.yml"
   workflow_dispatch:
 
@@ -62,3 +64,82 @@ jobs:
           set -euo pipefail
           brew uninstall --zap --cask krateos-bv/xenia-talk/xenia-files
           test ! -e "/Applications/Xenia Files.app"
+
+  xenia-talk:
+    name: xenia-talk (style, audit, upgrade from main, Gatekeeper, zap)
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Check out main as the previous tap state
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 1
+          path: previous-tap
+
+      - name: Use main as the krateos-bv/xenia-talk tap
+        run: |
+          set -euo pipefail
+          TAPS="$(brew --repository)/Library/Taps/krateos-bv"
+          mkdir -p "${TAPS}"
+          rm -rf "${TAPS}/homebrew-xenia-talk"
+          ln -s "${GITHUB_WORKSPACE}/previous-tap" "${TAPS}/homebrew-xenia-talk"
+          brew tap | grep -x krateos-bv/xenia-talk
+          # Current Homebrew refuses to load casks from a third-party tap until it is trusted.
+          brew trust krateos-bv/xenia-talk
+
+      - name: brew install (cask from main)
+        run: |
+          set -euo pipefail
+          brew install --cask krateos-bv/xenia-talk/xenia-talk
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "/Applications/Xenia Talk.app/Contents/Info.plist"
+
+      - name: Switch the tap to this checkout
+        run: |
+          set -euo pipefail
+          TAPS="$(brew --repository)/Library/Taps/krateos-bv"
+          rm -f "${TAPS}/homebrew-xenia-talk"
+          ln -s "${GITHUB_WORKSPACE}" "${TAPS}/homebrew-xenia-talk"
+          # Keep only this checkout's casks in the tap; the install above is in the Caskroom.
+          rm -rf "${GITHUB_WORKSPACE}/previous-tap"
+          brew trust krateos-bv/xenia-talk
+
+      - name: brew style
+        run: brew style krateos-bv/xenia-talk/xenia-talk
+
+      - name: brew audit (online)
+        run: brew audit --cask --online krateos-bv/xenia-talk/xenia-talk
+
+      - name: brew upgrade over the main install
+        run: |
+          set -euo pipefail
+          brew upgrade --cask krateos-bv/xenia-talk/xenia-talk
+          WANT="$(brew info --cask --json=v2 krateos-bv/xenia-talk/xenia-talk | jq -r '.casks[0].version')"
+          GOT="$(brew list --cask --versions xenia-talk | awk '{print $2}')"
+          echo "cask version ${WANT}, installed ${GOT}"
+          test "${WANT}" = "${GOT}"
+
+      - name: Installed app is signed, notarised and accepted by Gatekeeper
+        run: |
+          set -euo pipefail
+          APP="/Applications/Xenia Talk.app"
+          test -d "${APP}"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${APP}/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${APP}/Contents/Info.plist"
+          codesign --verify --deep --strict --verbose=2 "${APP}"
+          xcrun stapler validate "${APP}"
+          spctl --assess --type execute --verbose=4 "${APP}"
+
+      - name: brew uninstall --zap
+        run: |
+          set -euo pipefail
+          brew uninstall --zap --cask krateos-bv/xenia-talk/xenia-talk
+          test ! -e "/Applications/Xenia Talk.app"
