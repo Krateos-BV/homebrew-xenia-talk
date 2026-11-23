@@ -1,6 +1,6 @@
 cask "xenia-files" do
-  version "26.11.11.2"
-  sha256 "7d95000c7a53899499a4663497024b7647a17d8b218edfc643462dffad5712fe"
+  version "26.11.19"
+  sha256 "ccc87df707b15f32ceab4c5082d1698b4c2f09a1892d2d7bd6464c5a963122b1"
 
   url "https://github.com/Krateos-BV/files-desktop/releases/download/v#{version}/Xenia-Files-v#{version}-macos-arm64-signed.dmg"
   name "Xenia Files"
