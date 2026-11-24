@@ -20,7 +20,8 @@ cask "xenia-files" do
   uninstall quit: "eu.xeniacloud.desktopclient"
 
   # Paths derived from APPLICATION_NAME, APPLICATION_REV_DOMAIN and DEVELOPMENT_TEAM
-  # in files-desktop NEXTCLOUD.cmake. Check them against a real install before merge.
+  # in files-desktop NEXTCLOUD.cmake. Not yet checked against a signed-in install
+  # (CI only zaps a clean runner); confirm with `brew uninstall --zap` on one.
   zap trash: [
     "~/Library/Application Scripts/eu.xeniacloud.desktopclient.*",
     "~/Library/Application Scripts/HKHX362RBY.eu.xeniacloud.desktopclient",
